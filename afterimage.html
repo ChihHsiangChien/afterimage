@@ -121,8 +121,8 @@
 
 		<p>Ball Radius: <span id="ball_radius_value"></span>
 			<input type="range" min="10" max="40" value="10" class="slider" id="ball_radius_range">	
-		<p>speed: <span id="ball_speed"></span>
-			<input type="range" min="10" max="100" value="20" class="slider" id="ball_speed_range">
+		<p>speed: <span id="ball_speed_value"></span>
+			<input type="range" min="10" max="100" value="100" class="slider" id="ball_speed_range">
 
 	</div>
 	<p><div id="message"></div>
@@ -233,10 +233,31 @@ ball_radius_slider.oninput = function() {
 
 }
 
+//設定速度
+var ball_speed_slider = document.getElementById("ball_speed_range");
+ball_speed_value.innerHTML = ball_speed_slider.value;
+ball_speed_slider.oninput= function() {
+
+	ball_speed_value.innerHTML = this.value;
+	if(timer_exist = true){
+		running = false;
+	}
+	
+	speed = ball_speed_slider.value;
+	run();
+	//running = true;
+	//running = true;
+	
+	//run(speed = ball_speed_slider.value );
+
+}
+
 //表示圓球的類
-function Ball(x, y ,radius, speed, color_r, color_g, color_b){
-    this.x = x || centerX + dis * Math.cos(theta*(Math.PI/180));   //圓球的x座標
-    this.y = y || centerY - dis * Math.sin(theta*(Math.PI/180));   //圓球的y座標
+function Ball(x, y ,radius, speed, color_r, color_g, color_b,order){
+	this.order = 1 ;
+
+    this.x = x || centerX + dis * Math.cos(theta *(order) * (Math.PI/180));   //圓球的x座標
+    this.y = y || centerY - dis * Math.sin(theta *(order) * (Math.PI/180));   //圓球的y座標
 	
     this.radius = radius || ball_radius_slider.value;                //圓球的半徑
     this.speed = speed || 5;                  //圓球的移動速度，預設是5
@@ -244,62 +265,14 @@ function Ball(x, y ,radius, speed, color_r, color_g, color_b){
 	this.color_r = color_r || ballcolor_slider_r.value;   
     this.color_g = color_g || ballcolor_slider_g.value; 
 	this.color_b = color_b || ballcolor_slider_b.value; 
-    //向內移動
-    this.moveInner = function(){
-        this.x += this.speed * Math.sin((theta-90)*(Math.PI/180)) ;
-		this.y += this.speed * Math.cos((theta-90)*(Math.PI/180)) ;
-		
-        var maxX = canvas.width - this.radius;
-        var maxY = canvas.height - this.radius;		
-		
-		//防止超出邊界
-        if(this.y < this.radius){
-            //防止超出上邊界
-            this.y = this.radius;           
-        }
-        if(this.y > maxY){
-            //防止超出下邊界
-            this.y = maxY;
-        }		
-        if(this.x < this.radius){
-            //防止超出左邊界
-            this.x = this.radius;           
-        }
-        if(this.x > maxX){
-            //防止超出右邊界
-            this.x = maxX;          
-        }		
-		
-    };
-   
-    //向外移動
-    this.moveOuter = function(){
-        this.x -= this.speed * Math.sin((theta-90)*(Math.PI/180)) ;		
-		this.y -= this.speed * Math.cos((theta-90)*(Math.PI/180)) ;
 
-		var maxX = canvas.width - this.radius;
-        var maxY = canvas.height - this.radius;		
-
-		//防止超出邊界
-        if(this.y < this.radius){
-            //防止超出上邊界
-            this.y = this.radius;           
-        }
-        if(this.y > maxY){
-            //防止超出下邊界
-            this.y = maxY;
-        }		
-        if(this.x < this.radius){
-            //防止超出左邊界
-            this.x = this.radius;           
-        }
-        if(this.x > maxX){
-            //防止超出右邊界
-            this.x = maxX;          
-        }
-    };
 	
-		
+    this.move = function(){
+        this.x = centerX + dis * Math.cos(theta *(order +1) * (Math.PI/180));
+		this.y = centerY - dis * Math.sin(theta *(order +1) * (Math.PI/180)); 
+	};		
+	this.draw = function(){
+	}
 }
 
 	
@@ -335,10 +308,11 @@ function drawCenter(){
 //繪製小球
 function drawBall(ball){
     if(typeof ctx != "undefined"){
-		//根據序號改變球的顏色
+		//根據設定改變球的顏色
 		ctx.fillStyle = 'rgb(' + ball.color_r + ',' + ball.color_g +','+ ball.color_b +')';
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball_radius_slider.value, 0, Math.PI * 2, false);
+		console.log(ball_1.x);
         ctx.fill();
 	}
 }
@@ -367,10 +341,11 @@ function angleChange() {
 }
 	
 //更新小球
-function changeBall(){
+function changeBall(order=0){
 	document.getElementById("theta").innerHTML = "現在角度：" + theta +"°";
-	ball.x = centerX + dis * Math.cos(theta*(Math.PI/180));
-	ball.y = centerY - dis * Math.sin(theta*(Math.PI/180));
+	ball.x = centerX + dis * Math.cos(theta *(order + 1) * (Math.PI/180));
+	ball.y = centerY - dis * Math.sin(theta *(order + 1) * (Math.PI/180));
+	//ball.move()
 	ball.color_r = ballcolor_slider_r.value;
 	ball.color_g = ballcolor_slider_g.value;
 	ball.color_b = ballcolor_slider_b.value;
@@ -453,8 +428,8 @@ function moveBall(event){
 
 
 	
-var ball = new Ball();
-	
+var ball_1 = new Ball(order = 1);
+let speed = ball_speed_slider.value;
 //檢測當前瀏覽器是否支援canvas對象，以免在不支持html5的瀏覽器中顯示語法錯誤
 if(canvas.getContext){  
     //獲取對應的CanvasRenderingContext2D對象（畫筆）
@@ -462,29 +437,47 @@ if(canvas.getContext){
 	
 	drawBackground();
 	drawCenter();
-    drawBall(ball);
+    drawBall(ball_1);
 	
 }
 
 
+let timer_exist = false;
+let running = true;
+//run();
+
 let start = Date.now();
+function run() {
+	let stamp = 0;	
+	let timer = setInterval(function() {
+		timer_exist = true;
+		running = true;
+		let timePassed = Date.now() - start;
 
-let timer = setInterval(function() {
-	let timePassed = Date.now() - start;
-	
-	theta += angle;
-	if(theta >= 360 ){
-		theta = 0;           
-	}			
-	changeBall()
-	clearCanvas();  //先清空畫布
-	drawBackground();
-	drawCenter();
-    drawBall(ball); //再繪製最新的小球
-//暫停動畫
-//if (timePassed > 10000) clearInterval(timer);
+		stamp += 1;
+		console.log(stamp);
+		theta += angle;
+		if(theta >= 360 ){
+			theta = 0;           
+		}			
+		changeBall()
+		clearCanvas();  //先清空畫布
+		drawBackground();
+		drawCenter();
+		drawBall(ball); //再繪製最新的小球
 
-}, 10);
+		//暫停動畫
+		if (running == false) {
+			clearInterval(timer);
+			console.log('in');
+			timer_exist = false;
+
+		}
+		//if (timePassed > 1000) clearInterval(timer);
+	}, speed);
+}
+
+
 
 </script>
 
