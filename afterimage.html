@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<!--source https://jsfiddle.net/rtoal/wvp4scLL/-->
+<!--球的運動修改自 https://jsfiddle.net/rtoal/wvp4scLL/  -->
 
 <style type="text/css">
     body {
-        text-align: left;
+        float: left;
+        text-align: center;
     }
 
-
     #setting {
-        float: left;
+        float: right;
         text-align: left;
-        line-height: 20px;
-        font-size: 20px;
+        line-height: 15px;
+        font-size: 15px;
         color: #000000;
         font-weight: lighter;
         vertical-align: top;
@@ -19,7 +19,7 @@
     }
 
     #canvas {
-        float: left;
+        float: right;
         position: relative;
         background-color: #ccddcc;
         margin: 1em auto;
@@ -40,31 +40,36 @@
 </head>
 
 <body>
+    <h2>負片後像</h2>
+
+    <div id="canvas"></div>
     <div id="setting">
-        <h2>設定</h2>
-        <hr>
+        
         <div class="slidecontainer">
             <p>背景顏色: <span id="bgcolor_value"></span></p>
-            <p><input type="range" min="0" max="255" value="50" class="slider" id="bgcolor_range"></p>
+            <p><input type="range" min="0" max="255" value="170" class="slider" id="bgcolor_range"></p>
             <hr>
 
             <p>球的顏色R: <span id="ballcolor_value_r"></span></p>
-            <p><input type="range" min="0" max="255" value="200" class="slider" id="ballcolor_range_r"></p>
+            <p><input type="range" min="0" max="255" value="255" class="slider" id="ballcolor_range_r"></p>
             <p>球的顏色G: <span id="ballcolor_value_g"></span></p>
-            <p><input type="range" min="0" max="255" value="200" class="slider" id="ballcolor_range_g"></p>
+            <p><input type="range" min="0" max="255" value="0" class="slider" id="ballcolor_range_g"></p>
             <p>球的顏色B: <span id="ballcolor_value_b"></span></p>
-            <p><input type="range" min="0" max="255" value="200" class="slider" id="ballcolor_range_b"></p>
+            <p><input type="range" min="0" max="255" value="255" class="slider" id="ballcolor_range_b"></p>
             <hr>
-            <p><a href="http://a-chien.blogspot.com" target="_blank" >阿簡生物筆記</a></p>
+            <p>執行速度: <span id="speed_value"></span></p>
+            <p><input type="range" min="1" max="20" value="4" class="slider" id="speed_range"></p>           
+            <p>作者:<a href="http://a-chien.blogspot.com" target="_blank" >阿簡生物筆記</a></p>
+            <p>v.1 bug in speed</p>
 
         </div>
     </div>
-    <div id="canvas"></div>
+
 
 
 
     <script type="text/javascript">
-
+        //設定底圖畫布
         var canvas = {
             element: document.getElementById('canvas'),
             width: 500,
@@ -73,11 +78,7 @@
             initialize: function () {
                 this.element.style.width = this.width + 'px';
                 this.element.style.height = this.height + 'px';
-                this.element.style.backgroundColor = 'rgb(50,50,50)';
-
-
-
-
+                this.element.style.backgroundColor = 'rgb(' + bgcolor_slider.value + ',' + bgcolor_slider.value + ',' + bgcolor_slider.value + ')';
                 document.body.appendChild(this.element);
             },
 
@@ -93,11 +94,10 @@
         var bgcolor_value = document.getElementById("bgcolor_value");
         bgcolor_value.innerHTML = bgcolor_slider.value;
 
-        //調整背景顏色
+        //用slider調整背景顏色
         bgcolor_slider.oninput = function () {
             bgcolor_value.innerHTML = this.value;
             canvas.changeColor(this.value);
-
         }
 
 
@@ -109,46 +109,55 @@
         var ballcolor_value_r = document.getElementById("ballcolor_value_r");
         var ballcolor_value_g = document.getElementById("ballcolor_value_g");
         var ballcolor_value_b = document.getElementById("ballcolor_value_b");
-
+        
+        //改變html標籤內的色彩數值
         ballcolor_value_r.innerHTML = ballcolor_slider_r.value;
         ballcolor_value_g.innerHTML = ballcolor_slider_g.value;
         ballcolor_value_b.innerHTML = ballcolor_slider_b.value;
 
-        //調整球的顏色
+        //用slider調整球的顏色
         ballcolor_slider_r.oninput = function () {
             ballcolor_value_r.innerHTML = this.value;
         }
         ballcolor_slider_g.oninput = function () {
             ballcolor_value_g.innerHTML = this.value;
-
         }
         ballcolor_slider_b.oninput = function () {
             ballcolor_value_b.innerHTML = this.value;
         }
+        
+        //修改速度
+        var speed_slider = document.getElementById("speed_range");
+        var speed_value = document.getElementById("speed_value");
+        speed_value.innerHTML = speed_slider.value;
+        var speed = speed_slider.value;
+
+
+        //用slider調整速度
+        speed_slider.oninput = function () {
+            speed_value.innerHTML = this.value;
+            speed = speed_slider.value;
+        }
 
 
 
-
-
-        //定義中心點
+        //定義畫布中心點
         var center_x = canvas.width / 2;
         var center_y = canvas.height / 2;
 
-        //定義距離中心的距離
-        var dist = 200;
-
-        //中央十字?
-
 
         var Ball = {
-            create: function (color, dtheta) {
+            create: function (width, height, color, dtheta, dist) {
                 var newBall = Object.create(this);
+
+                newBall.width = width || 70;
+                newBall.height = height || 70;
                 newBall.color = color || 'rgb(' + ballcolor_slider_r.value + ',' + ballcolor_slider_g.value + ',' + ballcolor_slider_b.value + ')';
                 newBall.dtheta = dtheta || 30;
-                newBall.width = 70;
-                newBall.height = 70;
+                newBall.dist = dist || 200;
+
                 newBall.element = document.createElement('div');
-                newBall.element.style.backgroundColor = color;
+                newBall.element.style.backgroundColor = color|| 'rgb(' + ballcolor_slider_r.value + ',' + ballcolor_slider_g.value + ',' + ballcolor_slider_b.value + ')';
                 newBall.element.style.width = newBall.width + 'px';
                 newBall.element.style.height = newBall.height + 'px';
                 newBall.element.className += ' ball';
@@ -158,8 +167,8 @@
                 return newBall;
             },
             moveTo: function (theta) {
-                this.element.style.left = center_x - 35 + dist * Math.sin(theta * Math.PI / 180) + 'px';
-                this.element.style.top = center_y - 35 + dist * Math.cos(theta * Math.PI / 180) + 'px';
+                this.element.style.left = center_x - .5*this.width  + this.dist * Math.sin(theta * Math.PI / 180) + 'px';
+                this.element.style.top =  center_y - .5*this.height + this.dist * Math.cos(theta * Math.PI / 180) + 'px';
             },
             changeDirectionIfNecessary: function (theta) {
                 if (theta >= 360) {
@@ -177,7 +186,7 @@
                 setTimeout(function () {
                     ball.changeDirectionIfNecessary(theta);
                     ball.draw(theta + ball.dtheta, r, g, b);
-                }, 1000 / 30);
+                }, 1000 / speed);   //調整動畫速度
             }
         };
 
@@ -193,6 +202,7 @@
         var ball9 = Ball.create();
         var ball10 = Ball.create();
         var ball11 = Ball.create();
+        var ball_center = Ball.create(width=10, height=10, color='red', dtheta=0, dist=.01);
 
         ball1.draw(0);
         ball2.draw(30);
@@ -205,6 +215,7 @@
         ball9.draw(240);
         ball10.draw(270);
         ball11.draw(300);
+        ball_center.draw(theta=0, r=25, g=25, b=25);
 
     </script>
 
